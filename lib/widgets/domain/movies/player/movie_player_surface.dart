@@ -105,6 +105,7 @@ class _MoviePlayerSurfaceState extends ConsumerState<MoviePlayerSurface> {
   late final MoviePlayerMobileDrawerCoordinator _mobileDrawer;
   StreamSubscription<Duration>? _seekSubscription;
   StreamSubscription<void>? _playSubscription;
+  StreamSubscription<void>? _pauseSubscription;
   StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<bool>? _playingSubscription;
   StreamSubscription<bool>? _completedSubscription;
@@ -169,6 +170,9 @@ class _MoviePlayerSurfaceState extends ConsumerState<MoviePlayerSurface> {
     _playSubscription = widget.surfaceController.playStream.listen((_) {
       unawaited(_player.play());
     });
+    _pauseSubscription = widget.surfaceController.pauseStream.listen((_) {
+      unawaited(_player.pause());
+    });
     _positionSubscription = _player.stream.position.listen((position) {
       widget.onPositionChanged?.call(position);
       _startupSeek.onPosition(position);
@@ -217,6 +221,10 @@ class _MoviePlayerSurfaceState extends ConsumerState<MoviePlayerSurface> {
       _playSubscription = widget.surfaceController.playStream.listen((_) {
         unawaited(_player.play());
       });
+      _pauseSubscription?.cancel();
+      _pauseSubscription = widget.surfaceController.pauseStream.listen((_) {
+        unawaited(_player.pause());
+      });
     }
     if (oldWidget.resolvedUrl != widget.resolvedUrl) {
       _statsSampler.updateContext(originalUrl: widget.resolvedUrl);
@@ -244,6 +252,7 @@ class _MoviePlayerSurfaceState extends ConsumerState<MoviePlayerSurface> {
   void dispose() {
     _seekSubscription?.cancel();
     _playSubscription?.cancel();
+    _pauseSubscription?.cancel();
     _positionSubscription?.cancel();
     _playingSubscription?.cancel();
     _completedSubscription?.cancel();

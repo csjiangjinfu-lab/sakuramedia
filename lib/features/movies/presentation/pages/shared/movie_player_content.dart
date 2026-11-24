@@ -311,6 +311,9 @@ class _MoviePlayerContentState extends ConsumerState<MoviePlayerContent>
     if (media == null || start == null || end == null) {
       return;
     }
+    // 暂停播放，释放远端拉流连接，避免播放流与切片流并发命中同一 115 直链
+    // 触发 403 / moov atom not found 导致切片失败。切片优先。
+    _surfaceController.pause();
     final created = await showCreateClipDialog(
       context,
       mediaId: media.mediaId,
