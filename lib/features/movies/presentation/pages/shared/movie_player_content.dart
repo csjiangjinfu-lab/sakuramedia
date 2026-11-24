@@ -353,6 +353,8 @@ class _MoviePlayerContentState extends ConsumerState<MoviePlayerContent>
     if (media == null || start == null || end == null) {
       return;
     }
+    // 圈选完成后先暂停播放，释放 115 CDN 并发连接，避免剪辑拉流被限流。
+    _surfaceController.pause();
     final created = await showCreateClipDialog(
       context,
       mediaId: media.mediaId,
@@ -465,9 +467,11 @@ PlayerConfiguration buildMoviePlayerConfiguration() =>
 class MoviePlayerSurfaceController {
   final _seekController = StreamController<Duration>.broadcast();
   final _playController = StreamController<void>.broadcast();
+  final _pauseController = StreamController<void>.broadcast();
 
   Stream<Duration> get seekStream => _seekController.stream;
   Stream<void> get playStream => _playController.stream;
+  Stream<void> get pauseStream => _pauseController.stream;
 
   void seekTo(Duration position) {
     if (_seekController.isClosed) return;
@@ -479,9 +483,15 @@ class MoviePlayerSurfaceController {
     _playController.add(null);
   }
 
+  void pause() {
+    if (_pauseController.isClosed) return;
+    _pauseController.add(null);
+  }
+
   void dispose() {
     _seekController.close();
     _playController.close();
+    _pauseController.close();
   }
 }
 
@@ -756,6 +766,7 @@ class _MoviePlayerSurfaceState extends ConsumerState<MoviePlayerSurface> {
   bool _systemControlsReady = false;
   StreamSubscription<Duration>? _seekSubscription;
   StreamSubscription<void>? _playSubscription;
+  StreamSubscription<void>? _pauseSubscription;
   StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<bool>? _playingSubscription;
   StreamSubscription<bool>? _completedSubscription;
@@ -823,6 +834,9 @@ class _MoviePlayerSurfaceState extends ConsumerState<MoviePlayerSurface> {
     _playSubscription = widget.surfaceController.playStream.listen((_) {
       unawaited(_player.play());
     });
+    _pauseSubscription = widget.surfaceController.pauseStream.listen((_) {
+      unawaited(_player.pause());
+    });
     _positionSubscription = _player.stream.position.listen((position) {
       widget.onPositionChanged?.call(position);
       _startupSeek.onPosition(position);
@@ -883,6 +897,10 @@ class _MoviePlayerSurfaceState extends ConsumerState<MoviePlayerSurface> {
       _playSubscription = widget.surfaceController.playStream.listen((_) {
         unawaited(_player.play());
       });
+      _pauseSubscription?.cancel();
+      _pauseSubscription = widget.surfaceController.pauseStream.listen((_) {
+        unawaited(_player.pause());
+      });
     }
     if (oldWidget.resolvedUrl != widget.resolvedUrl ||
         oldWidget.playerUserAgent != widget.playerUserAgent ||
@@ -920,6 +938,7 @@ class _MoviePlayerSurfaceState extends ConsumerState<MoviePlayerSurface> {
   void dispose() {
     _seekSubscription?.cancel();
     _playSubscription?.cancel();
+    _pauseSubscription?.cancel();
     _positionSubscription?.cancel();
     _playingSubscription?.cancel();
     _completedSubscription?.cancel();
