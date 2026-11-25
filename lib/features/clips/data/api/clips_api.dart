@@ -1,5 +1,6 @@
 import 'package:sakuramedia/core/network/api_client.dart';
 import 'package:sakuramedia/core/network/paginated_response_dto.dart';
+import 'package:sakuramedia/features/clips/data/dto/clip_job_dto.dart';
 import 'package:sakuramedia/features/clips/data/dto/media_clip_dto.dart';
 import 'package:sakuramedia/features/clips/data/dto/media_clip_thumbnail_dto.dart';
 
@@ -113,5 +114,80 @@ class ClipsApi {
       '/media-clips/$clipId/thumbnails',
     );
     return response.map(MediaClipThumbnailDto.fromJson).toList(growable: false);
+  }
+
+  /// 入队一个异步剪辑任务（后端返回 202；命中去重返回 200）。
+  Future<ClipJobDto> createClipJob({
+    required int mediaId,
+    required int startThumbnailId,
+    required int endThumbnailId,
+    String title = '',
+  }) async {
+    final response = await _apiClient.post(
+      '/media/$mediaId/clip-jobs',
+      data: <String, dynamic>{
+        'start_thumbnail_id': startThumbnailId,
+        'end_thumbnail_id': endThumbnailId,
+        'title': title.trim(),
+      },
+    );
+    return ClipJobDto.fromJson(response);
+  }
+
+  /// 剪辑任务列表（全局分页，可按 [state] / [mediaId] 过滤）。
+  Future<PaginatedResponseDto<ClipJobDto>> listClipJobs({
+    int page = 1,
+    int pageSize = 20,
+    String? state,
+    int? mediaId,
+  }) async {
+    final response = await _apiClient.get(
+      '/media-clips/jobs',
+      queryParameters: <String, dynamic>{
+        'page': page,
+        'page_size': pageSize,
+        if (state != null && state.isNotEmpty) 'state': state,
+        'media_id': ?mediaId,
+      },
+    );
+    return PaginatedResponseDto<ClipJobDto>.fromJson(
+      response,
+      ClipJobDto.fromJson,
+    );
+  }
+
+  /// 取消尚未开始执行的任务（后端 204）。
+  Future<void> cancelClipJob({required int jobId}) {
+    return _apiClient.deleteNoContent('/media-clips/jobs/$jobId');
+  }
+
+  /// 重试失败任务（后端 200，返回新的任务快照）。
+  Future<ClipJobDto> retryClipJob({required int jobId}) async {
+    final response = await _apiClient.post('/media-clips/jobs/$jobId/retry');
+    return ClipJobDto.fromJson(response);
+  }
+
+  /// 上报「这个媒体正在播放」（后端 204，无响应体）。
+  ///
+  /// 后端心跳 TTL 较短，剪辑队列据此跳过同媒体任务，故播放期间需持续上报。
+  Future<void> touchPlaybackHeartbeat({
+    required int mediaId,
+    required String clientId,
+  }) {
+    return _apiClient.postNoContent(
+      '/media/$mediaId/playback-heartbeat',
+      data: <String, dynamic>{'client_id': clientId},
+    );
+  }
+
+  /// 停止播放时清除心跳（后端 204，无响应体）。
+  Future<void> clearPlaybackHeartbeat({
+    required int mediaId,
+    required String clientId,
+  }) {
+    return _apiClient.deleteNoContent(
+      '/media/$mediaId/playback-heartbeat',
+      queryParameters: <String, dynamic>{'client_id': clientId},
+    );
   }
 }
