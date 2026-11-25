@@ -41,6 +41,9 @@ abstract final class DesktopRoutes {
   static AppRouteTarget clips() =>
       const AppRouteTarget(id: AppRouteId.desktopClips);
 
+  static AppRouteTarget clipJobs() =>
+      const AppRouteTarget(id: AppRouteId.desktopClipJobs);
+
   static AppRouteTarget videos() =>
       const AppRouteTarget(id: AppRouteId.desktopVideos);
 
@@ -440,6 +443,9 @@ abstract final class MobileRoutes {
     id: AppRouteId.mobileTagMovies,
     pathParameters: {'tagId': '$tagId'},
   );
+
+  static AppRouteTarget clipJobs() =>
+      const AppRouteTarget(id: AppRouteId.mobileClipJobs);
 
   static AppRouteTarget clipCollections() =>
       const AppRouteTarget(id: AppRouteId.mobileClipCollections);

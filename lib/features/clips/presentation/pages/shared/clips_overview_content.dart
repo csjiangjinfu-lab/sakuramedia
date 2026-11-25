@@ -400,6 +400,12 @@ class _ClipsOverviewContentState extends ConsumerState<ClipsOverviewContent>
         ),
         actions: <Widget>[
           AppGlassIconButton(
+            key: const Key('mobile-clips-jobs-entry'),
+            tooltip: l10n.clipJobsTitle,
+            icon: Icons.queue_rounded,
+            onPressed: () => MobileRoutes.clipJobs().push<void>(context),
+          ),
+          AppGlassIconButton(
             key: const Key('mobile-clips-sort-trigger'),
             tooltip: currentSort == ClipsFilter.defaultSort
                 ? l10n.clipSortLatest
@@ -475,18 +481,23 @@ class _ClipsOverviewContentState extends ConsumerState<ClipsOverviewContent>
           onChanged: _applySort,
         ),
       ),
-      trailing: hasClips
-          ? AppGlassHeaderGroup(
-              children: <Widget>[
-                AppGlassHeaderButton(
-                  key: const Key('clips-enter-selection-button'),
-                  icon: Icons.check_circle_outline,
-                  label: l10n.baseSelect,
-                  onTap: enterSelection,
-                ),
-              ],
-            )
-          : null,
+      trailing: AppGlassHeaderGroup(
+        children: <Widget>[
+          AppGlassHeaderButton(
+            key: const Key('clips-jobs-entry'),
+            icon: Icons.queue_rounded,
+            label: l10n.clipJobsTitle,
+            onTap: () => DesktopRoutes.clipJobs().push<void>(context),
+          ),
+          if (hasClips)
+            AppGlassHeaderButton(
+              key: const Key('clips-enter-selection-button'),
+              icon: Icons.check_circle_outline,
+              label: l10n.baseSelect,
+              onTap: enterSelection,
+            ),
+        ],
+      ),
       filterUpdate: headerView.filterUpdate,
       hasPreviousFilterItems: hasClips,
       onRetryFilter: () =>

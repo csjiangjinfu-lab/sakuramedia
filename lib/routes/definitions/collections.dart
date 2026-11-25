@@ -5,7 +5,9 @@ import 'package:sakuramedia/features/clip_collections/presentation/pages/desktop
 import 'package:sakuramedia/features/clip_collections/presentation/pages/desktop/clip_collections_page.dart';
 import 'package:sakuramedia/features/clip_collections/presentation/pages/mobile/clip_collection_play_page.dart';
 import 'package:sakuramedia/features/clip_collections/presentation/pages/mobile/clip_collections_page.dart';
+import 'package:sakuramedia/features/clips/presentation/pages/desktop/clip_jobs_page.dart';
 import 'package:sakuramedia/features/clips/presentation/pages/desktop/clips_page.dart';
+import 'package:sakuramedia/features/clips/presentation/pages/mobile/clip_jobs_page.dart';
 import 'package:sakuramedia/features/moment_collections/presentation/pages/desktop/moment_collection_detail_page.dart';
 import 'package:sakuramedia/features/moment_collections/presentation/pages/desktop/moment_collections_page.dart';
 import 'package:sakuramedia/features/moment_collections/presentation/pages/mobile/moment_collection_detail_page.dart';
@@ -189,4 +191,26 @@ final AppRouteDefinition mobileMomentCollectionDetailRoute = AppRouteDefinition(
   ),
   title: (l10n, [_]) => l10n.routeCollectionsTitle,
   backTarget: (state) => mobileMomentCollectionsPath,
+);
+
+final AppRouteDefinition desktopClipJobsRoute = AppRouteDefinition(
+  id: AppRouteId.desktopClipJobs,
+  name: 'desktop-clip-jobs',
+  platform: AppPlatform.desktop,
+  path: desktopClipJobsPath,
+  scope: AppRouteScope.shellLevel,
+  pageBuilder: (context, state) => const DesktopClipJobsPage(),
+  title: (l10n, [_]) => l10n.clipJobsTitle,
+  backTarget: (state) => desktopClipsPath,
+);
+
+final AppRouteDefinition mobileClipJobsRoute = AppRouteDefinition(
+  id: AppRouteId.mobileClipJobs,
+  name: 'mobile-clip-jobs',
+  platform: AppPlatform.mobile,
+  path: mobileClipJobsPath,
+  scope: AppRouteScope.shellLevel,
+  pageBuilder: (context, state) => const MobileClipJobsPage(),
+  title: (l10n, [_]) => l10n.clipJobsTitle,
+  backTarget: (state) => mobileOverviewPath,
 );
