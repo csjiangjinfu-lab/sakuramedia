@@ -142,16 +142,15 @@ class _MoviePlayerContentState extends ConsumerState<MoviePlayerContent>
     if (!mounted) {
       return;
     }
+    final heartbeat = ref.read(playbackHeartbeatServiceProvider);
     final mediaId = _playerState.selectedMedia?.mediaId;
-    if (mediaId == null) {
+    // 暂停、播完、以及 selectedMedia 变空（加载中/切源）都要停心跳，
+    // 否则离开播放态后仍会按 15s 续期。
+    if (!playing || mediaId == null) {
+      heartbeat.stop();
       return;
     }
-    final heartbeat = ref.read(playbackHeartbeatServiceProvider);
-    if (playing) {
-      heartbeat.start(mediaId);
-    } else {
-      heartbeat.stop();
-    }
+    heartbeat.start(mediaId);
   }
 
   @override
