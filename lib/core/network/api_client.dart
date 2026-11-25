@@ -288,6 +288,7 @@ class ApiClient {
     dynamic data,
     Map<String, dynamic>? queryParameters,
     bool requiresAuth = true,
+    Duration? receiveTimeout,
   }) async {
     await _request<void>(
       method: 'POST',
@@ -295,6 +296,7 @@ class ApiClient {
       data: data,
       queryParameters: queryParameters,
       requiresAuth: requiresAuth,
+      receiveTimeout: receiveTimeout,
     );
   }
 
@@ -334,6 +336,7 @@ class ApiClient {
     dynamic data,
     Map<String, dynamic>? queryParameters,
     bool requiresAuth = true,
+    Duration? receiveTimeout,
   }) async {
     await _request<void>(
       method: 'DELETE',
@@ -341,6 +344,7 @@ class ApiClient {
       data: data,
       queryParameters: queryParameters,
       requiresAuth: requiresAuth,
+      receiveTimeout: receiveTimeout,
     );
   }
 

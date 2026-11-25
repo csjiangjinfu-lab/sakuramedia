@@ -13,6 +13,10 @@ class ClipsApi {
   /// 避免前端默认 30s 提前超时。
   static const Duration _createTimeout = Duration(seconds: 130);
 
+  /// 心跳是 15s 一次的轻量保活：不能沿用 Dio 默认的 30s 接收超时
+  /// （与后端 TTL 余量相同，超时后才失败会让心跳链断档），单独压到 5s。
+  static const Duration _heartbeatTimeout = Duration(seconds: 5);
+
   /// 在某媒体上圈选两张缩略图创建切片。
   ///
   /// 新建返回 201、命中去重返回 200，两者都带 `MediaClipResource` 响应体。
@@ -177,6 +181,7 @@ class ClipsApi {
     return _apiClient.postNoContent(
       '/media/$mediaId/playback-heartbeat',
       data: <String, dynamic>{'client_id': clientId},
+      receiveTimeout: _heartbeatTimeout,
     );
   }
 
@@ -188,6 +193,7 @@ class ClipsApi {
     return _apiClient.deleteNoContent(
       '/media/$mediaId/playback-heartbeat',
       queryParameters: <String, dynamic>{'client_id': clientId},
+      receiveTimeout: _heartbeatTimeout,
     );
   }
 }

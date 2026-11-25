@@ -12,6 +12,7 @@ import 'package:sakuramedia/core/media/playback_user_agent.dart';
 import 'package:sakuramedia/core/media/playback_source.dart';
 import 'package:sakuramedia/core/media/playback_resume_policy.dart';
 import 'package:sakuramedia/core/network/api_error_message.dart';
+import 'package:sakuramedia/core/playback/playback_heartbeat_service.dart';
 import 'package:sakuramedia/core/session/providers/session_store_provider.dart';
 import 'package:sakuramedia/features/media/data/media_api.dart';
 import 'package:sakuramedia/features/image_search/presentation/actions/image_search_launcher.dart';
@@ -115,6 +116,8 @@ class _VideoPlayerContentState extends ConsumerState<VideoPlayerContent>
 
   @override
   void dispose() {
+    // 播放页销毁时立刻清心跳，别等 TTL 过期，否则剪辑队列会误判仍在播放。
+    ref.read(playbackHeartbeatServiceProvider).stop();
     disposePlayerAppFullscreen();
     _thumbnailRequestVersion++;
     _positionSubscription?.cancel();
@@ -300,6 +303,24 @@ class _VideoPlayerContentState extends ConsumerState<VideoPlayerContent>
 
   void _handlePlayingChanged(bool playing) {
     _progressController.handlePlaybackPlayingChanged(playing);
+    _syncPlaybackHeartbeat(playing);
+  }
+
+  /// 播放状态变化时同步心跳：只在播放中上报，暂停/播完/换源立刻停。
+  ///
+  /// 视频页也能圈选生成切片，而剪辑队列靠这个心跳判断「同媒体正在播放」；
+  /// 缺了它，正在播放时排队的任务会被并发执行，正是异步剪辑要避免的。
+  void _syncPlaybackHeartbeat(bool playing) {
+    if (!mounted) {
+      return;
+    }
+    final heartbeat = ref.read(playbackHeartbeatServiceProvider);
+    final mediaId = _media?.mediaId;
+    if (!playing || mediaId == null) {
+      heartbeat.stop();
+      return;
+    }
+    heartbeat.start(mediaId);
   }
 
   void _resolveResumePrompt() {

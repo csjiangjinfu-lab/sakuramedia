@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:sakuramedia/core/format/media_timecode.dart';
 import 'package:sakuramedia/core/network/api_error_message.dart';
 import 'package:sakuramedia/features/clips/data/dto/clip_job_dto.dart';
+import 'package:sakuramedia/features/clips/presentation/actions/clip_playback_launcher.dart';
 import 'package:sakuramedia/features/clips/presentation/providers/clips_api_provider.dart';
 import 'package:sakuramedia/l10n/app_localizations.dart';
 import 'package:sakuramedia/theme.dart';
@@ -34,6 +35,10 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
   Timer? _timer;
   bool _loading = true;
   String? _error;
+
+  /// 是否至少成功加载过一次列表。轮询失败只在已有数据时静默吞掉，
+  /// 否则会把「首屏加载失败」永远显示成「暂无任务」。
+  bool _hasLoadedOnce = false;
   List<ClipJobDto> _jobs = const <ClipJobDto>[];
 
   /// 请求序号：每次 [_load] 自增，回来的响应若序号过期就丢弃，
@@ -72,14 +77,15 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
         _jobs = page.items;
         _error = null;
         _loading = false;
+        _hasLoadedOnce = true;
       });
     } catch (error) {
       if (!mounted || seq != _loadSeq) {
         return;
       }
-      if (silent) {
-        // 轮询失败不打扰用户：保留上一份列表，等下一次轮询恢复。
-        setState(() => _loading = false);
+      if (silent && _hasLoadedOnce) {
+        // 已有数据时轮询失败不打扰用户：保留上一份列表，等下一次轮询恢复。
+        // 此时 _loading 早已是 false，不能在这里改它。
         return;
       }
       final l10n = AppLocalizations.of(context);
@@ -159,6 +165,40 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
     }
     if (mounted) {
       await _load(silent: true);
+    }
+  }
+
+  /// 打开已生成切片：任务列表只带 clip_id，播放地址要再拉一次详情。
+  Future<void> _openClip(ClipJobDto job) async {
+    final clipId = job.clipId;
+    if (clipId == null) {
+      return;
+    }
+    final l10n = AppLocalizations.of(context);
+    try {
+      final detail = await ref
+          .read(clipsApiProvider)
+          .getClipDetail(clipId: clipId);
+      if (!mounted) {
+        return;
+      }
+      await launchClipPlayback(
+        context,
+        streamUrl: detail.streamUrl,
+        title: detail.title,
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      showToast(
+        apiErrorMessage(
+          error,
+          fallback: l10n.clipJobsActionFailed,
+          l10n: l10n,
+        ),
+        tone: AppToastTone.error,
+      );
     }
   }
 
@@ -254,9 +294,11 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
     final reason = _errorLabel(l10n, job);
     // AppContentCard 的标题没有 maxLines：编号正常是短文本，只有编号缺失时
     // 才退回标题文本（长标题会换行，接受，不为一行截断另造参数）。
-    final heading = job.movieNumber ?? job.title;
+    // 编号可能是空串（后端字段存在但没值），空串当标题会让卡片头部留白。
+    final hasMovieNumber = job.movieNumber?.trim().isNotEmpty ?? false;
+    final heading = hasMovieNumber ? job.movieNumber! : job.title;
     // 标题已经是标题文本时正文不再重复；标题是编号时正文补上标题。
-    final detail = job.movieNumber == null ? range : '$range  ${job.title}';
+    final detail = hasMovieNumber ? '$range  ${job.title}' : range;
     final isPending = _pendingJobId == job.jobId;
     final canAct = _pendingJobId == null;
     return AppContentCard(
@@ -298,6 +340,14 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: <Widget>[
+              if (job.state == 'succeeded' && job.clipId != null)
+                AppTextButton(
+                  key: Key('clip-job-view-${job.jobId}'),
+                  label: l10n.clipCollectionPlay,
+                  size: AppTextButtonSize.small,
+                  emphasis: AppTextButtonEmphasis.accent,
+                  onPressed: () => unawaited(_openClip(job)),
+                ),
               if (job.canCancel)
                 AppTextButton(
                   key: Key('clip-job-cancel-${job.jobId}'),
