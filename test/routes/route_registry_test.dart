@@ -17,9 +17,9 @@ void main() {
   });
 
   test('registry contains exactly the current route surface', () {
-    expect(appRoutes.definitions.length, 105);
-    expect(appRoutes.forPlatform(AppPlatform.desktop).length, 49);
-    expect(appRoutes.forPlatform(AppPlatform.mobile).length, 56);
+    expect(appRoutes.definitions.length, 107);
+    expect(appRoutes.forPlatform(AppPlatform.desktop).length, 50);
+    expect(appRoutes.forPlatform(AppPlatform.mobile).length, 57);
 
     expect(
       appRoutes.scoped(AppPlatform.desktop, AppRouteScope.outsideShell).length,
@@ -31,11 +31,11 @@ void main() {
     );
     expect(
       appRoutes.scoped(AppPlatform.desktop, AppRouteScope.shellLevel).length,
-      25,
+      26,
     );
     expect(
       appRoutes.scoped(AppPlatform.mobile, AppRouteScope.outsideShell).length,
-      43,
+      44,
     );
     expect(
       appRoutes.scoped(AppPlatform.mobile, AppRouteScope.branchRoot).length,
@@ -44,6 +44,11 @@ void main() {
     expect(
       appRoutes.scoped(AppPlatform.mobile, AppRouteScope.branchChild).length,
       8,
+    );
+    // 移动路由树只挂载 outsideShell 与分支，shellLevel 的移动路由不可达。
+    expect(
+      appRoutes.scoped(AppPlatform.mobile, AppRouteScope.shellLevel).length,
+      0,
     );
     final ids = appRoutes.definitions
         .map((definition) => definition.id)
@@ -137,12 +142,12 @@ void main() {
     final subpages = appRoutes.definitions
         .where((definition) => definition.subpageChrome != null)
         .toList(growable: false);
-    expect(subpages.length, 45);
+    expect(subpages.length, 46);
     expect(
       subpages
           .where((definition) => definition.subpageChrome!.glassChrome)
           .length,
-      27,
+      28,
     );
     expect(
       subpages
