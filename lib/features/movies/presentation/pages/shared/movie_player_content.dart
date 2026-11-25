@@ -17,6 +17,7 @@ import 'package:sakuramedia/core/media/providers/player_subtitle_preference_prov
 import 'package:sakuramedia/core/media/playback_user_agent.dart';
 import 'package:sakuramedia/core/media/playback_source.dart';
 import 'package:sakuramedia/core/network/providers/api_client_provider.dart';
+import 'package:sakuramedia/core/playback/playback_heartbeat_service.dart';
 import 'package:sakuramedia/widgets/base/actions/app_button.dart';
 import 'package:sakuramedia/widgets/base/feedback/app_toast.dart';
 import 'package:sakuramedia/core/format/file_size.dart';
@@ -127,11 +128,30 @@ class _MoviePlayerContentState extends ConsumerState<MoviePlayerContent>
 
   @override
   void dispose() {
+    // 播放页销毁时立刻清心跳，别等 45s TTL 过期，否则剪辑队列会误判仍在播放。
+    ref.read(playbackHeartbeatServiceProvider).stop();
     disposePlayerAppFullscreen();
     unawaited(_controller.flushPlaybackProgress());
     _surfaceController.dispose();
     _splitController.dispose();
     super.dispose();
+  }
+
+  /// 播放状态变化时同步心跳：只在播放中上报，暂停/播完立刻停。
+  void _syncPlaybackHeartbeat(bool playing) {
+    if (!mounted) {
+      return;
+    }
+    final mediaId = _playerState.selectedMedia?.mediaId;
+    if (mediaId == null) {
+      return;
+    }
+    final heartbeat = ref.read(playbackHeartbeatServiceProvider);
+    if (playing) {
+      heartbeat.start(mediaId);
+    } else {
+      heartbeat.stop();
+    }
   }
 
   @override
@@ -252,7 +272,10 @@ class _MoviePlayerContentState extends ConsumerState<MoviePlayerContent>
       resumePosition: _playerState.resumePlaybackPosition,
       onResumePromptResolved: _controller.resolveResumePrompt,
       onPositionChanged: _controller.handlePlaybackPosition,
-      onPlayingChanged: _controller.handlePlaybackPlayingChanged,
+      onPlayingChanged: (playing) {
+        _controller.handlePlaybackPlayingChanged(playing);
+        _syncPlaybackHeartbeat(playing);
+      },
       subtitleState: _playerState.subtitleState,
       onSubtitleSelectionChanged: _controller.setSelectedSubtitleId,
       onSubtitleReloadRequested: () => _controller.loadSubtitles(),
