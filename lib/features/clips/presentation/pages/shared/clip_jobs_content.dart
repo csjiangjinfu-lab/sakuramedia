@@ -41,7 +41,7 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
   int _loadSeq = 0;
 
   /// 正在执行取消/重试的 job；同一时间只允许一个动作，避免重复提交。
-  String? _pendingJobId;
+  int? _pendingJobId;
 
   @override
   void initState() {
@@ -110,19 +110,25 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
     setState(() => _pendingJobId = job.jobId);
     try {
       await ref.read(clipsApiProvider).cancelClipJob(jobId: job.jobId);
-      await _load(silent: true);
     } catch (error) {
-      if (!mounted) {
-        return;
+      if (mounted) {
+        showToast(
+          apiErrorMessage(
+            error,
+            fallback: l10n.clipJobsActionFailed,
+            l10n: l10n,
+          ),
+          tone: AppToastTone.error,
+        );
       }
-      showToast(
-        apiErrorMessage(error, fallback: l10n.clipJobsActionFailed, l10n: l10n),
-        tone: AppToastTone.error,
-      );
     } finally {
+      // 先解除忙碌态再刷新列表：刷新慢时按钮不会一直转圈。
       if (mounted) {
         setState(() => _pendingJobId = null);
       }
+    }
+    if (mounted) {
+      await _load(silent: true);
     }
   }
 
@@ -134,19 +140,25 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
     setState(() => _pendingJobId = job.jobId);
     try {
       await ref.read(clipsApiProvider).retryClipJob(jobId: job.jobId);
-      await _load(silent: true);
     } catch (error) {
-      if (!mounted) {
-        return;
+      if (mounted) {
+        showToast(
+          apiErrorMessage(
+            error,
+            fallback: l10n.clipJobsActionFailed,
+            l10n: l10n,
+          ),
+          tone: AppToastTone.error,
+        );
       }
-      showToast(
-        apiErrorMessage(error, fallback: l10n.clipJobsActionFailed, l10n: l10n),
-        tone: AppToastTone.error,
-      );
     } finally {
+      // 先解除忙碌态再刷新列表：刷新慢时按钮不会一直转圈。
       if (mounted) {
         setState(() => _pendingJobId = null);
       }
+    }
+    if (mounted) {
+      await _load(silent: true);
     }
   }
 
@@ -240,7 +252,11 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
         '${formatMediaTimecode(job.startOffsetSeconds)} - '
         '${formatMediaTimecode(job.endOffsetSeconds)}';
     final reason = _errorLabel(l10n, job);
+    // AppContentCard 的标题没有 maxLines：编号正常是短文本，只有编号缺失时
+    // 才退回标题文本（长标题会换行，接受，不为一行截断另造参数）。
     final heading = job.movieNumber ?? job.title;
+    // 标题已经是标题文本时正文不再重复；标题是编号时正文补上标题。
+    final detail = job.movieNumber == null ? range : '$range  ${job.title}';
     final isPending = _pendingJobId == job.jobId;
     final canAct = _pendingJobId == null;
     return AppContentCard(
@@ -260,7 +276,7 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            '$range  ${job.title}',
+            detail,
             style: resolveAppTextStyle(
               context,
               size: AppTextSize.s12,
