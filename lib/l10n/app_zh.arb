@@ -1918,7 +1918,6 @@
   "videoNoAvailableMedia": "该视频暂无可用媒体",
   "videoCoverSet": "已设为封面",
   "videoCoverSetFailed": "设置封面失败，请重试",
-  "videoClipCreated": "切片已生成",
   "videoDetailLoadFailed": "视频详情暂时无法加载，请重试",
   "videoCollectionNoPlayable": "合集内没有可播放的视频",
   "videoEpisodePanelTitle": "选集 · {count}",
@@ -3265,7 +3264,6 @@
   "clipCreateTitleHint": "切片标题（可选）",
   "clipCreateNotice": "提交后加入后台生成队列，完成后可在「我的切片」查看。",
   "clipCreateAction": "创建",
-  "clipCreateTimeout": "切片耗时较长，请稍后在「我的切片」查看",
   "clipCreateRangeTooLong": "区间过长（最长 15 分钟）",
   "clipCreateInvalidRange": "请选择不同的起止点",
   "clipCreateFailed": "切片失败，请重试",
@@ -3605,7 +3603,6 @@
       }
     }
   },
-  "moviePageClipCreated": "切片已生成",
   "movieActionDetailMenuTitle": "影片操作",
   "movieActionSelect": "选择",
   "movieActionSubscribeMovie": "订阅影片",
@@ -4641,7 +4638,6 @@
   "movieWidgetPlay": "播放",
   "movieWidgetMerge": "合并",
   "movieWidgetMoreActions": "更多操作",
-  "movieWidgetClipCreated": "切片已生成",
   "movieWidgetMagnetSearch": "磁力搜索",
   "movieWidgetDownloadSubmitted": "已提交到 {clientName}",
   "@movieWidgetDownloadSubmitted": {

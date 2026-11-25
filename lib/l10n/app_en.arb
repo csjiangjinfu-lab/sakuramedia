@@ -1918,7 +1918,6 @@
   "videoNoAvailableMedia": "This video has no media yet",
   "videoCoverSet": "Cover updated",
   "videoCoverSetFailed": "Failed to set the cover. Please try again.",
-  "videoClipCreated": "Clip created",
   "videoDetailLoadFailed": "The video details could not be loaded. Please try again.",
   "videoCollectionNoPlayable": "This collection has no playable videos",
   "videoEpisodePanelTitle": "Episodes · {count}",
@@ -3265,7 +3264,6 @@
   "clipCreateTitleHint": "Clip title (optional)",
   "clipCreateNotice": "Submitted jobs enter a background queue; find them under My clips when done.",
   "clipCreateAction": "Create",
-  "clipCreateTimeout": "This clip is taking a while. Check “My clips” later.",
   "clipCreateRangeTooLong": "Range is too long (15 minutes max)",
   "clipCreateInvalidRange": "Choose different start and end points",
   "clipCreateFailed": "Clipping failed. Please try again.",
@@ -3605,7 +3603,6 @@
       }
     }
   },
-  "moviePageClipCreated": "Clip created",
   "movieActionDetailMenuTitle": "Movie actions",
   "movieActionSelect": "Select",
   "movieActionSubscribeMovie": "Subscribe",
@@ -4488,7 +4485,6 @@
   "movieWidgetPlay": "Play",
   "movieWidgetMerge": "Merge",
   "movieWidgetMoreActions": "More actions",
-  "movieWidgetClipCreated": "Clip created",
   "movieWidgetMagnetSearch": "Magnet search",
   "movieWidgetDownloadSubmitted": "Submitted to {clientName}",
   "@movieWidgetDownloadSubmitted": {
