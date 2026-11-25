@@ -171,10 +171,12 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
   /// 打开已生成切片：任务列表只带 clip_id，播放地址要再拉一次详情。
   Future<void> _openClip(ClipJobDto job) async {
     final clipId = job.clipId;
-    if (clipId == null) {
+    if (clipId == null || _pendingJobId != null) {
       return;
     }
     final l10n = AppLocalizations.of(context);
+    // 拉详情期间占用同一个忙碌位，避免连点重复请求与重复起播。
+    setState(() => _pendingJobId = job.jobId);
     try {
       final detail = await ref
           .read(clipsApiProvider)
@@ -199,6 +201,10 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
         ),
         tone: AppToastTone.error,
       );
+    } finally {
+      if (mounted) {
+        setState(() => _pendingJobId = null);
+      }
     }
   }
 
@@ -346,7 +352,8 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
                   label: l10n.clipCollectionPlay,
                   size: AppTextButtonSize.small,
                   emphasis: AppTextButtonEmphasis.accent,
-                  onPressed: () => unawaited(_openClip(job)),
+                  isLoading: isPending,
+                  onPressed: canAct ? () => unawaited(_openClip(job)) : null,
                 ),
               if (job.canCancel)
                 AppTextButton(

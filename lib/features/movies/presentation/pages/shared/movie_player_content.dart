@@ -96,6 +96,10 @@ class _MoviePlayerContentState extends ConsumerState<MoviePlayerContent>
   late final MultiSplitViewController _splitController;
   late final MoviePlayerSurfaceController _surfaceController;
 
+  /// 本页是否启动了全局心跳；只有启动过的页面才有权 stop()，
+  /// 否则别的 Tab 里仍在播放的页面会被本页的暂停/销毁误清。
+  bool _heartbeatStarted = false;
+
   MoviePlayerState get _playerState => ref.read(moviePlayerProvider(_scope));
 
   @override
@@ -129,7 +133,11 @@ class _MoviePlayerContentState extends ConsumerState<MoviePlayerContent>
   @override
   void dispose() {
     // 播放页销毁时立刻清心跳，别等 45s TTL 过期，否则剪辑队列会误判仍在播放。
-    ref.read(playbackHeartbeatServiceProvider).stop();
+    // 只清本页自己启动的心跳：分支导航器常驻，别的 Tab 可能正在播放。
+    if (_heartbeatStarted) {
+      ref.read(playbackHeartbeatServiceProvider).stop();
+      _heartbeatStarted = false;
+    }
     disposePlayerAppFullscreen();
     unawaited(_controller.flushPlaybackProgress());
     _surfaceController.dispose();
@@ -146,11 +154,13 @@ class _MoviePlayerContentState extends ConsumerState<MoviePlayerContent>
     final mediaId = _playerState.selectedMedia?.mediaId;
     // 暂停、播完、以及 selectedMedia 变空（加载中/切源）都要停心跳，
     // 否则离开播放态后仍会按 15s 续期。
-    if (!playing || mediaId == null) {
+    if (playing && mediaId != null) {
+      heartbeat.start(mediaId);
+      _heartbeatStarted = true;
+    } else if (_heartbeatStarted) {
       heartbeat.stop();
-      return;
+      _heartbeatStarted = false;
     }
-    heartbeat.start(mediaId);
   }
 
   @override

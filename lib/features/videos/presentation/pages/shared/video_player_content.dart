@@ -69,6 +69,10 @@ class _VideoPlayerContentState extends ConsumerState<VideoPlayerContent>
     with PlayerAppFullscreenStateMixin<VideoPlayerContent> {
   final ValueNotifier<int?> _activeThumbnailIndex = ValueNotifier<int?>(null);
 
+  /// 本页是否启动了全局心跳；只有启动过的页面才有权 stop()，
+  /// 否则别的 Tab 里仍在播放的页面会被本页的暂停/销毁误清。
+  bool _heartbeatStarted = false;
+
   late final MediaPlaybackProgressController _progressController;
   Player? _player;
   VideoController? _controller;
@@ -117,7 +121,11 @@ class _VideoPlayerContentState extends ConsumerState<VideoPlayerContent>
   @override
   void dispose() {
     // 播放页销毁时立刻清心跳，别等 TTL 过期，否则剪辑队列会误判仍在播放。
-    ref.read(playbackHeartbeatServiceProvider).stop();
+    // 只清本页自己启动的心跳：分支导航器常驻，别的 Tab 可能正在播放。
+    if (_heartbeatStarted) {
+      ref.read(playbackHeartbeatServiceProvider).stop();
+      _heartbeatStarted = false;
+    }
     disposePlayerAppFullscreen();
     _thumbnailRequestVersion++;
     _positionSubscription?.cancel();
@@ -316,11 +324,13 @@ class _VideoPlayerContentState extends ConsumerState<VideoPlayerContent>
     }
     final heartbeat = ref.read(playbackHeartbeatServiceProvider);
     final mediaId = _media?.mediaId;
-    if (!playing || mediaId == null) {
+    if (playing && mediaId != null) {
+      heartbeat.start(mediaId);
+      _heartbeatStarted = true;
+    } else if (_heartbeatStarted) {
       heartbeat.stop();
-      return;
+      _heartbeatStarted = false;
     }
-    heartbeat.start(mediaId);
   }
 
   void _resolveResumePrompt() {
