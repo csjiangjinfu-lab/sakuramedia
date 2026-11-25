@@ -390,7 +390,7 @@ class _MoviePlayerContentState extends ConsumerState<MoviePlayerContent>
       return;
     }
     showToast(
-      AppLocalizations.of(context).moviePageClipCreated,
+      AppLocalizations.of(context).clipJobEnqueued,
       tone: AppToastTone.success,
     );
     // 退出圈选模式并清空已选点。

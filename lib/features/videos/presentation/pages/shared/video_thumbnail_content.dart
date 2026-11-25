@@ -230,7 +230,7 @@ class _VideoThumbnailContentState extends ConsumerState<VideoThumbnailContent> {
       return;
     }
     showToast(
-      AppLocalizations.of(context).videoClipCreated,
+      AppLocalizations.of(context).clipJobEnqueued,
       tone: AppToastTone.success,
     );
     _thumbnailController.toggleClipSelectionMode();

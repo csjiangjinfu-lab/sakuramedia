@@ -202,7 +202,7 @@ class _MovieDetailInspectorPanelState
       return;
     }
     showToast(
-      AppLocalizations.of(context).movieWidgetClipCreated,
+      AppLocalizations.of(context).clipJobEnqueued,
       tone: AppToastTone.success,
     );
     // 退出圈选模式并清空已选点。

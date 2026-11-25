@@ -3271,6 +3271,7 @@
   "clipCreateFailed": "Clipping failed. Please try again.",
   "clipCreateThumbnailExpired": "The thumbnail has expired. Please select again.",
   "clipCreateFailedFallback": "Failed to create the clip. Please try again.",
+  "clipJobEnqueued": "Added to generation queue",
   "clipRenameTitle": "Rename clip",
   "clipRenameHint": "Clip title (leave empty to clear)",
   "imageSearchCapabilitiesLoadFailed": "Failed to load feature status",

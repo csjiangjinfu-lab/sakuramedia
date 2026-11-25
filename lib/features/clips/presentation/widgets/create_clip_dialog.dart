@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sakuramedia/core/format/media_timecode.dart';
 import 'package:sakuramedia/core/network/api_error_message.dart';
 import 'package:sakuramedia/core/network/api_exception.dart';
-import 'package:sakuramedia/features/clips/data/dto/media_clip_dto.dart';
+import 'package:sakuramedia/features/clips/data/dto/clip_job_dto.dart';
 import 'package:sakuramedia/l10n/app_localizations.dart';
 import 'package:sakuramedia/theme.dart';
 import 'package:sakuramedia/widgets/base/overlays/app_dialog.dart';
@@ -14,10 +14,10 @@ import 'package:sakuramedia/widgets/base/forms/app_text_field.dart';
 
 import 'package:sakuramedia/features/clips/presentation/providers/clips_api_provider.dart';
 
-/// 弹出切片标题输入对话框并执行同步切片创建。
+/// 弹出切片标题输入对话框并把切片加入生成队列。
 ///
-/// 成功返回新建（或命中去重的）切片；用户取消或切片超时返回 `null`。
-Future<MediaClipDto?> showCreateClipDialog(
+/// 成功返回新建（或命中去重的）剪辑任务；用户取消返回 `null`。
+Future<ClipJobDto?> showCreateClipDialog(
   BuildContext context, {
   required int mediaId,
   required String movieNumber,
@@ -26,7 +26,7 @@ Future<MediaClipDto?> showCreateClipDialog(
   required int startSeconds,
   required int endSeconds,
 }) {
-  return showAppDialog<MediaClipDto>(
+  return showAppDialog<ClipJobDto>(
     context: context,
     barrierDismissible: false,
     builder: (dialogContext) => CreateClipDialog(
@@ -180,9 +180,9 @@ class _CreateClipDialogState extends ConsumerState<CreateClipDialog> {
       _isSubmitting = true;
     });
     try {
-      final clip = await ref
+      final job = await ref
           .read(clipsApiProvider)
-          .createClip(
+          .createClipJob(
             mediaId: widget.mediaId,
             startThumbnailId: widget.startThumbnailId,
             endThumbnailId: widget.endThumbnailId,
@@ -191,17 +191,10 @@ class _CreateClipDialogState extends ConsumerState<CreateClipDialog> {
       if (!mounted) {
         return;
       }
-      Navigator.of(context).pop(clip);
+      Navigator.of(context).pop(job);
     } catch (error) {
-      final isTimeout = _isTimeout(error);
       showToast(_clipErrorMessage(error, l10n), tone: AppToastTone.error);
       if (!mounted) {
-        return;
-      }
-      // 切片超时时后端可能仍在生成，关闭对话框让用户稍后在「我的切片」查看；
-      // 其余错误保留对话框便于修正后重试。
-      if (isTimeout) {
-        Navigator.of(context).pop();
         return;
       }
       setState(() {
@@ -211,23 +204,13 @@ class _CreateClipDialogState extends ConsumerState<CreateClipDialog> {
   }
 }
 
-bool _isTimeout(Object error) {
-  return error is ApiException &&
-      error.transportFailureKind == ApiTransportFailureKind.timeout;
-}
-
 String _clipErrorMessage(Object error, AppLocalizations l10n) {
   if (error is ApiException) {
-    if (error.transportFailureKind == ApiTransportFailureKind.timeout) {
-      return l10n.clipCreateTimeout;
-    }
     switch (error.error?.code) {
       case 'media_clip_too_long':
         return l10n.clipCreateRangeTooLong;
       case 'media_clip_invalid_range':
         return l10n.clipCreateInvalidRange;
-      case 'media_clip_generation_failed':
-        return l10n.clipCreateFailed;
       case 'media_thumbnail_not_found':
         return l10n.clipCreateThumbnailExpired;
     }

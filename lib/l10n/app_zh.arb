@@ -3271,6 +3271,7 @@
   "clipCreateFailed": "切片失败，请重试",
   "clipCreateThumbnailExpired": "缩略图已失效，请重新选择",
   "clipCreateFailedFallback": "创建切片失败，请重试",
+  "clipJobEnqueued": "已加入生成队列",
   "clipRenameTitle": "重命名切片",
   "clipRenameHint": "切片标题（可留空）",
   "imageSearchCapabilitiesLoadFailed": "功能状态加载失败",
