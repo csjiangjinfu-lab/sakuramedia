@@ -11,7 +11,9 @@ import 'package:sakuramedia/theme.dart';
 import 'package:sakuramedia/widgets/base/actions/app_text_button.dart';
 import 'package:sakuramedia/widgets/base/feedback/app_empty_state.dart';
 import 'package:sakuramedia/widgets/base/feedback/app_error_state.dart';
+import 'package:sakuramedia/widgets/base/feedback/app_status_chip.dart';
 import 'package:sakuramedia/widgets/base/feedback/app_toast.dart';
+import 'package:sakuramedia/widgets/base/layout/cards/app_content_card.dart';
 
 /// 异步剪辑任务列表共享内容。
 ///
@@ -34,6 +36,13 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
   String? _error;
   List<ClipJobDto> _jobs = const <ClipJobDto>[];
 
+  /// 请求序号：每次 [_load] 自增，回来的响应若序号过期就丢弃，
+  /// 避免轮询与手动刷新（或取消/重试后的刷新）互相覆盖。
+  int _loadSeq = 0;
+
+  /// 正在执行取消/重试的 job；同一时间只允许一个动作，避免重复提交。
+  String? _pendingJobId;
+
   @override
   void initState() {
     super.initState();
@@ -51,11 +60,12 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
   }
 
   Future<void> _load({bool silent = false}) async {
+    final seq = ++_loadSeq;
     try {
       final page = await ref
           .read(clipsApiProvider)
           .listClipJobs(page: 1, pageSize: 50);
-      if (!mounted) {
+      if (!mounted || seq != _loadSeq) {
         return;
       }
       setState(() {
@@ -64,7 +74,7 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
         _loading = false;
       });
     } catch (error) {
-      if (!mounted) {
+      if (!mounted || seq != _loadSeq) {
         return;
       }
       if (silent) {
@@ -84,8 +94,20 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
     }
   }
 
+  void _retryLoad() {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    unawaited(_load());
+  }
+
   Future<void> _cancel(ClipJobDto job) async {
+    if (_pendingJobId != null) {
+      return;
+    }
     final l10n = AppLocalizations.of(context);
+    setState(() => _pendingJobId = job.jobId);
     try {
       await ref.read(clipsApiProvider).cancelClipJob(jobId: job.jobId);
       await _load(silent: true);
@@ -97,11 +119,19 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
         apiErrorMessage(error, fallback: l10n.clipJobsActionFailed, l10n: l10n),
         tone: AppToastTone.error,
       );
+    } finally {
+      if (mounted) {
+        setState(() => _pendingJobId = null);
+      }
     }
   }
 
   Future<void> _retry(ClipJobDto job) async {
+    if (_pendingJobId != null) {
+      return;
+    }
     final l10n = AppLocalizations.of(context);
+    setState(() => _pendingJobId = job.jobId);
     try {
       await ref.read(clipsApiProvider).retryClipJob(jobId: job.jobId);
       await _load(silent: true);
@@ -113,6 +143,10 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
         apiErrorMessage(error, fallback: l10n.clipJobsActionFailed, l10n: l10n),
         tone: AppToastTone.error,
       );
+    } finally {
+      if (mounted) {
+        setState(() => _pendingJobId = null);
+      }
     }
   }
 
@@ -134,6 +168,19 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
     return state;
   }
 
+  /// 任务状态 → 共享语义：失败 error、成功 success、运行中 info、
+  /// 延后 warning、排队/取消 neutral。
+  AppStatusChipPalette _statePalette(String state) {
+    final semantic = switch (state) {
+      'failed' => AppStatusSemantic.error,
+      'succeeded' => AppStatusSemantic.success,
+      'running' => AppStatusSemantic.inProgress,
+      'deferred' => AppStatusSemantic.warning,
+      _ => AppStatusSemantic.neutral,
+    };
+    return AppStatusChipPalette.forSemantic(semantic);
+  }
+
   String _errorLabel(AppLocalizations l10n, ClipJobDto job) {
     switch (job.lastErrorCode) {
       case 'playback_active':
@@ -151,6 +198,7 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final spacing = context.appSpacing;
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -160,7 +208,7 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
         title: l10n.clipJobsLoadFailed,
         message: error,
         retryKey: const Key('clip-jobs-error-retry'),
-        onRetry: () => unawaited(_load()),
+        onRetry: _retryLoad,
       );
     }
     if (_jobs.isEmpty) {
@@ -172,10 +220,13 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
     }
     return ListView.separated(
       key: const Key('clip-jobs-list'),
-      padding: EdgeInsets.all(widget.mobile ? 12 : 24),
+      padding: EdgeInsets.all(
+        widget.mobile ? spacing.md : AppPageInsets.desktop,
+      ),
       itemCount: _jobs.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 8),
-      itemBuilder: (context, index) => _buildJobCard(context, l10n, _jobs[index]),
+      separatorBuilder: (context, index) => SizedBox(height: spacing.sm),
+      itemBuilder: (context, index) =>
+          _buildJobCard(context, l10n, _jobs[index]),
     );
   }
 
@@ -185,61 +236,29 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
     ClipJobDto job,
   ) {
     final spacing = context.appSpacing;
-    final colors = context.appColors;
     final range =
         '${formatMediaTimecode(job.startOffsetSeconds)} - '
         '${formatMediaTimecode(job.endOffsetSeconds)}';
     final reason = _errorLabel(l10n, job);
     final heading = job.movieNumber ?? job.title;
-    return Container(
+    final isPending = _pendingJobId == job.jobId;
+    final canAct = _pendingJobId == null;
+    return AppContentCard(
       key: Key('clip-job-row-${job.jobId}'),
-      padding: EdgeInsets.all(spacing.md),
-      decoration: BoxDecoration(
-        color: colors.surfaceMuted,
-        borderRadius: context.appRadius.mdBorder,
-        border: Border.all(color: colors.borderSubtle),
+      title: heading,
+      padding: EdgeInsets.symmetric(
+        horizontal: spacing.lg,
+        vertical: spacing.md,
       ),
+      headerTrailing: AppStatusChip(
+        label: _stateLabel(l10n, job.state),
+        palette: _statePalette(job.state),
+        dense: true,
+      ),
+      headerBottomSpacing: spacing.sm,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: Text(
-                  heading,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: resolveAppTextStyle(
-                    context,
-                    size: AppTextSize.s14,
-                    weight: AppTextWeight.semibold,
-                    tone: AppTextTone.primary,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 2,
-                ),
-                decoration: BoxDecoration(
-                  color: colors.surfaceCard,
-                  borderRadius: context.appRadius.smBorder,
-                  border: Border.all(color: colors.borderSubtle),
-                ),
-                child: Text(
-                  _stateLabel(l10n, job.state),
-                  style: resolveAppTextStyle(
-                    context,
-                    size: AppTextSize.s12,
-                    tone: AppTextTone.secondary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: spacing.xs),
           Text(
             '$range  ${job.title}',
             style: resolveAppTextStyle(
@@ -268,7 +287,8 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
                   key: Key('clip-job-cancel-${job.jobId}'),
                   label: l10n.clipJobCancel,
                   size: AppTextButtonSize.small,
-                  onPressed: () => unawaited(_cancel(job)),
+                  isLoading: isPending,
+                  onPressed: canAct ? () => unawaited(_cancel(job)) : null,
                 ),
               if (job.canRetry)
                 AppTextButton(
@@ -276,7 +296,8 @@ class _ClipJobsContentState extends ConsumerState<ClipJobsContent> {
                   label: l10n.clipJobRetry,
                   size: AppTextButtonSize.small,
                   emphasis: AppTextButtonEmphasis.accent,
-                  onPressed: () => unawaited(_retry(job)),
+                  isLoading: isPending,
+                  onPressed: canAct ? () => unawaited(_retry(job)) : null,
                 ),
             ],
           ),
