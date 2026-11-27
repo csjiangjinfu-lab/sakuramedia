@@ -98,13 +98,15 @@ services:
       # 若部署机器无法直连 GFriends 或元数据站点，取消下方三行注释并填入代理地址。
       # HTTP_PROXY: "http://192.168.1.1:7890"
       # HTTPS_PROXY: "http://192.168.1.1:7890"
-      # NO_PROXY: "localhost,127.0.0.1,postgres,qbittorrent"
+      # NO_PROXY: "localhost,127.0.0.1,postgres,qdrant,siglip2-embed"
       MALLOC_TRIM_THRESHOLD_: "131072"
     volumes:
       - ./sakuramedia-data:/data # 这行一般不需要动
       # 宿主机上包含「已有影片目录」和「媒体库目录」的父目录，按实际情况修改，这里按上文的假设来
       - /mnt:/mnt
 ```
+
+这里配置的 `HTTP_PROXY` / `HTTPS_PROXY` 会应用于 `sakuramedia` 容器的所有对外网络访问，包括连接 qBittorrent、115 网盘、光鸭云盘等服务；请自行通过 `NO_PROXY` 或代理侧规则做好分流，避免内网服务或无需代理的请求被送入代理。建议优先在路由器侧配置透明代理；如果路由器侧无法配置透明代理，再为 `sakuramedia` 容器配置代理，并注意做好分流。详见[元数据插件网络与代理](/zh-CN/faq#元数据插件网络与代理)。
 
 ::: danger 保存前必须修改
 - 把 `/mnt` 改成宿主机上包含「已有影片目录」和「媒体库目录」的父目录，必须是绝对路径。
@@ -241,6 +243,8 @@ www.javbus.com
 以图搜图和相似影片依赖 Qdrant 与 SigLIP2 嵌入服务。本文示例中的 CPU 镜像适用于 AMD、Intel 和 ARM64 主机。SigLIP2 镜像已包含模型和运行时，**不需要**下载模型、挂载模型目录或预先缩放图片。服务启动时会按镜像内安装的运行时自动选择推理后端，不需要配置。
 
 后端和嵌入服务在同一个 Compose 项目中时，不需要映射端口；后端默认通过 `http://siglip2-embed:8080` 访问服务。
+
+如果为外部元数据请求配置了容器代理，`NO_PROXY` 中要保留 `qdrant` 和 `siglip2-embed`，详见[元数据插件网络与代理](/zh-CN/faq#元数据插件网络与代理)。后端会直接连接 Qdrant 和 SigLIP2，远程 Qdrant 或 SigLIP2 地址必须能从 `sakuramedia` 容器直接访问，不能依赖 HTTP 代理。
 
 ### 按需启用
 

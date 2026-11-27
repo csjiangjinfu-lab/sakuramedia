@@ -937,6 +937,40 @@
   "systemLogsRawConfirmTitle": "导出未脱敏日志？",
   "systemLogsRawConfirmMessage": "日志可能包含凭据与隐私信息，请仅在可信环境中使用。",
   "systemLogsRawConfirmAction": "继续导出",
+  "agentConnectTitle": "连接 Agent",
+  "routeNavAgentConnectDescription": "把查片、下载、导入交给支持技能安装的 Agent。",
+  "agentConnectDescription": "选择技能和已有 API 密钥，复制连接信息发给支持技能安装的 Agent。",
+  "agentConnectLoading": "正在加载技能列表…",
+  "agentConnectLoadFailed": "技能列表加载失败",
+  "agentConnectEmpty": "暂时没有可安装的技能",
+  "agentConnectSelectAll": "全选",
+  "agentConnectClearSelection": "清空",
+  "agentConnectSelectedCount": "已选择 {count} 个技能",
+  "@agentConnectSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "agentConnectCopy": "复制连接信息",
+  "agentConnectCopying": "正在生成连接信息…",
+  "agentConnectCopied": "连接信息已复制",
+  "agentConnectCopyFailed": "复制失败，请重试",
+  "agentConnectSelectKeyTitle": "选择 API 密钥",
+  "agentConnectKeyUnavailable": "旧版本创建的密钥无法读取，请重新创建",
+  "agentConnectNoRecoverableKey": "没有可读取的 API 密钥，请先创建一把新密钥。",
+  "agentConnectRevealUnsupported": "当前后端不支持读取已有 API 密钥，请升级后端。",
+  "agentConnectGoCreateKey": "去创建 API 密钥",
+  "agentConnectRevealKeyFailed": "读取 API 密钥失败",
+  "agentConnectVersion": "v{version}",
+  "@agentConnectVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "configTabAccountSecurity": "账号安全",
   "configTabAppearance": "外观",
   "configTabMediaLibraries": "媒体库",
@@ -3573,16 +3607,54 @@
   },
   "moviePageDetailLoadFailed": "影片详情暂时无法加载，请稍后重试",
   "moviePageMergedPlayback": "合并播放",
-  "moviePageMergedPlaybackSegments": "合并播放 · {count} 段",
-  "@moviePageMergedPlaybackSegments": {
+  "moviePageMergedNotEnoughSegments": "该媒体库没有足够的可播放分段",
+  "moviePageMergedSelectionUnavailable": "所选媒体分段不可用，请重新选择",
+  "moviePageMergedLoadFailed": "合并播放加载失败，请稍后重试",
+  "movieMergePlaybackSelectHint": "请选择同一媒体库中的至少 2 个文件",
+  "movieMergePlaybackSelectedSummary": "已选 {count} 段 · {library}",
+  "@movieMergePlaybackSelectedSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "library": {
+        "type": "String"
+      }
+    }
+  },
+  "movieMergePlaybackOrderHint": "播放顺序按点击顺序",
+  "movieMergePlaybackSameLibraryHint": "合并只能选择同一媒体库",
+  "movieMergePlaybackLibraryDisabledHint": "与已选文件不在同一媒体库",
+  "movieMergePlaybackExternalUnsupportedHint": "该媒体库不支持外部合并播放",
+  "movieMergePlaybackNotEnoughHint": "可播放文件不足 2 个",
+  "movieMergePlaybackClearSelection": "清除选择",
+  "movieMergePlaybackUnavailable": "不可播放",
+  "movieMergePlaybackExternalMode": "将使用外部播放器 {player}",
+  "@movieMergePlaybackExternalMode": {
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "movieMergePlaybackInAppMode": "将在应用内连续播放",
+  "movieMergePlaybackFilesCount": "{count} 个文件",
+  "@movieMergePlaybackFilesCount": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "moviePageMergedNotEnoughSegments": "该媒体库没有足够的可播放分段",
-  "moviePageMergedLoadFailed": "合并播放加载失败，请稍后重试",
+  "movieMergePlaybackPlayableCount": "{count} 个可播放",
+  "@movieMergePlaybackPlayableCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "movieMergePlaybackSelectFile": "选择此文件",
   "moviePageEpisodePickerTitle": "选集 · {count}",
   "@moviePageEpisodePickerTitle": {
     "placeholders": {
@@ -3651,6 +3723,8 @@
   "movieActionExternalPlayerUnavailableInApp": "外部播放器不可用，已使用应用内播放",
   "movieActionExternalPlayerUnavailable": "外部播放器不可用",
   "movieActionMergedPlaybackUrlUnavailable": "无法获取合并播放地址",
+  "movieActionMergedPlaybackUnavailable": "当前没有可用的合并播放分段",
+  "movieActionMergedPlaybackSelectionMismatch": "合并播放返回的分段与所选不一致，请检查后端版本",
   "movieActionMergedPlaybackStartFailed": "合并播放启动失败，请稍后重试",
   "movieActionSearchSimilarImages": "相似图片",
   "movieActionSaveToLocal": "保存到本地",
@@ -4636,7 +4710,6 @@
   "movieWidgetReview": "评论",
   "movieWidgetThumbnail": "缩略图",
   "movieWidgetPlay": "播放",
-  "movieWidgetMerge": "合并",
   "movieWidgetMoreActions": "更多操作",
   "movieWidgetMagnetSearch": "磁力搜索",
   "movieWidgetDownloadSubmitted": "已提交到 {clientName}",
@@ -4666,26 +4739,6 @@
   "movieWidgetDeleteMedia": "删除媒体",
   "movieWidgetMomentsTitle": "时刻",
   "movieWidgetNoMediaPoints": "暂无标记点",
-  "movieWidgetSelectMergeLibraryTitle": "选择合并播放媒体库",
-  "movieWidgetMediaLibraryFallback": "媒体库 {id}",
-  "@movieWidgetMediaLibraryFallback": {
-    "placeholders": {
-      "id": {
-        "type": "int"
-      }
-    }
-  },
-  "movieWidgetMediaLibrarySegments": "{providerKey} · {count} 段",
-  "@movieWidgetMediaLibrarySegments": {
-    "placeholders": {
-      "providerKey": {
-        "type": "String"
-      },
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "movieWidgetNoPlotImages": "暂无剧情图",
   "movieWidgetNoSimilarMovies": "暂无相似影片",
   "movieWidgetSubtitleListLoadFailed": "字幕列表加载失败",
@@ -5706,6 +5759,7 @@
   "baseFilterUpdateFailedMessage": "暂时无法获取当前筛选结果，请稍后重试",
   "baseFilterUpdateStale": "筛选结果更新失败，仍显示上一次结果",
   "baseFilterResultsLoading": "筛选结果加载中",
+  "baseScrollDownForMore": "向下滚动查看更多",
   "baseSelect": "选择",
   "baseVideoLoading": "正在加载…",
   "baseVideoBuffering": "正在缓冲…",

@@ -937,6 +937,40 @@
   "systemLogsRawConfirmTitle": "Export unredacted logs?",
   "systemLogsRawConfirmMessage": "The logs may contain credentials and private information. Use them only in a trusted environment.",
   "systemLogsRawConfirmAction": "Export anyway",
+  "agentConnectTitle": "Connect an agent",
+  "routeNavAgentConnectDescription": "Hand searching, downloading and importing movies to an agent that supports skill installs.",
+  "agentConnectDescription": "Select skills and an existing API key, then copy the connection details for an agent that supports skill installation.",
+  "agentConnectLoading": "Loading skills…",
+  "agentConnectLoadFailed": "Failed to load skills",
+  "agentConnectEmpty": "No installable skills are available",
+  "agentConnectSelectAll": "Select all",
+  "agentConnectClearSelection": "Clear",
+  "agentConnectSelectedCount": "{count} skills selected",
+  "@agentConnectSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "agentConnectCopy": "Copy connection details",
+  "agentConnectCopying": "Generating connection details…",
+  "agentConnectCopied": "Connection details copied",
+  "agentConnectCopyFailed": "Failed to copy. Try again.",
+  "agentConnectSelectKeyTitle": "Select an API key",
+  "agentConnectKeyUnavailable": "Keys created before secret storage cannot be read. Create a new one.",
+  "agentConnectNoRecoverableKey": "There is no readable API key. Create a new key first.",
+  "agentConnectRevealUnsupported": "This backend does not support reading existing API keys. Upgrade the backend.",
+  "agentConnectGoCreateKey": "Create an API key",
+  "agentConnectRevealKeyFailed": "Failed to read the API key",
+  "agentConnectVersion": "v{version}",
+  "@agentConnectVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "configTabAccountSecurity": "Account security",
   "configTabAppearance": "Appearance",
   "configTabMediaLibraries": "Media libraries",
@@ -3573,16 +3607,54 @@
   },
   "moviePageDetailLoadFailed": "Movie details could not be loaded. Please try again later.",
   "moviePageMergedPlayback": "Merged playback",
-  "moviePageMergedPlaybackSegments": "Merged playback · {count} segments",
-  "@moviePageMergedPlaybackSegments": {
+  "moviePageMergedNotEnoughSegments": "This media library does not have enough playable segments",
+  "moviePageMergedSelectionUnavailable": "The selected media segments are unavailable. Please choose again.",
+  "moviePageMergedLoadFailed": "Failed to load merged playback. Please try again later.",
+  "movieMergePlaybackSelectHint": "Choose at least 2 files from the same media library",
+  "movieMergePlaybackSelectedSummary": "{count} selected · {library}",
+  "@movieMergePlaybackSelectedSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "library": {
+        "type": "String"
+      }
+    }
+  },
+  "movieMergePlaybackOrderHint": "Playback follows tap order",
+  "movieMergePlaybackSameLibraryHint": "Merged playback requires files from one media library",
+  "movieMergePlaybackLibraryDisabledHint": "Not in the selected media library",
+  "movieMergePlaybackExternalUnsupportedHint": "This media library does not support external merged playback",
+  "movieMergePlaybackNotEnoughHint": "Fewer than 2 playable files",
+  "movieMergePlaybackClearSelection": "Clear selection",
+  "movieMergePlaybackUnavailable": "Unavailable",
+  "movieMergePlaybackExternalMode": "Will open in {player}",
+  "@movieMergePlaybackExternalMode": {
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "movieMergePlaybackInAppMode": "Will play continuously in the app",
+  "movieMergePlaybackFilesCount": "{count} files",
+  "@movieMergePlaybackFilesCount": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "moviePageMergedNotEnoughSegments": "This media library does not have enough playable segments",
-  "moviePageMergedLoadFailed": "Failed to load merged playback. Please try again later.",
+  "movieMergePlaybackPlayableCount": "{count} playable",
+  "@movieMergePlaybackPlayableCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "movieMergePlaybackSelectFile": "Select this file",
   "moviePageEpisodePickerTitle": "Episodes · {count}",
   "@moviePageEpisodePickerTitle": {
     "placeholders": {
@@ -3651,6 +3723,8 @@
   "movieActionExternalPlayerUnavailableInApp": "The external player is unavailable; playing in the app instead",
   "movieActionExternalPlayerUnavailable": "The external player is unavailable",
   "movieActionMergedPlaybackUrlUnavailable": "Could not get the merged playback URL",
+  "movieActionMergedPlaybackUnavailable": "No merged playback segments are available",
+  "movieActionMergedPlaybackSelectionMismatch": "The merged playback segments do not match your selection. Check the backend version.",
   "movieActionMergedPlaybackStartFailed": "Failed to start merged playback. Please try again later.",
   "movieActionSearchSimilarImages": "Similar images",
   "movieActionSaveToLocal": "Save to device",
@@ -4483,7 +4557,6 @@
   "movieWidgetReview": "Reviews",
   "movieWidgetThumbnail": "Thumbnails",
   "movieWidgetPlay": "Play",
-  "movieWidgetMerge": "Merge",
   "movieWidgetMoreActions": "More actions",
   "movieWidgetMagnetSearch": "Magnet search",
   "movieWidgetDownloadSubmitted": "Submitted to {clientName}",
@@ -4513,26 +4586,6 @@
   "movieWidgetDeleteMedia": "Delete media",
   "movieWidgetMomentsTitle": "Moments",
   "movieWidgetNoMediaPoints": "No marked moments yet",
-  "movieWidgetSelectMergeLibraryTitle": "Choose a media library to merge",
-  "movieWidgetMediaLibraryFallback": "Library {id}",
-  "@movieWidgetMediaLibraryFallback": {
-    "placeholders": {
-      "id": {
-        "type": "int"
-      }
-    }
-  },
-  "movieWidgetMediaLibrarySegments": "{providerKey} · {count} segments",
-  "@movieWidgetMediaLibrarySegments": {
-    "placeholders": {
-      "providerKey": {
-        "type": "String"
-      },
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "movieWidgetNoPlotImages": "No plot images yet",
   "movieWidgetNoSimilarMovies": "No similar movies yet",
   "movieWidgetSubtitleListLoadFailed": "Failed to load subtitles",
@@ -5553,6 +5606,7 @@
   "baseFilterUpdateFailedMessage": "Could not load the current filter results. Please try again later.",
   "baseFilterUpdateStale": "Failed to update the filter results, still showing the previous results",
   "baseFilterResultsLoading": "Loading filter results",
+  "baseScrollDownForMore": "Scroll down for more",
   "baseSelect": "Select",
   "baseVideoLoading": "Loading…",
   "baseVideoBuffering": "Buffering…",
